@@ -117,7 +117,7 @@ def getProxy():
 
     if options.cmssw: os.environ["cmssw"] = options.cmssw
 
-    res   = read_from_subprocess( [ "renewProxyCertificate.sh" ] )
+    res   = read_from_subprocess( [ "getProxy.sh" ] )
     error = not bool(res)
     for out in res:
         if out and not "find a valid proxy" in out: print out

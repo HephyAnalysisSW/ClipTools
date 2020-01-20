@@ -1,10 +1,10 @@
 import os
 import commands
+import subprocess
 
 def read_from_subprocess(arglist):
     ''' Read line by line from subprocess
     '''
-    import subprocess
 
     proc = subprocess.Popen(arglist,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     res = []
@@ -17,7 +17,9 @@ def read_from_subprocess(arglist):
     return res
 
 def renew_proxy( filename = None, rfc = False, request_time = 192, min_time = 0):
-    import os, subprocess
+
+    if not min_time:     min_time     = 192
+    if not request_time: request_time = 192
 
     min_time     = int(min_time)
     request_time = int(request_time)
@@ -65,16 +67,18 @@ def renew_proxy( filename = None, rfc = False, request_time = 192, min_time = 0)
         arg_list += ['-rfc']
 
     # make proxy
-    p = subprocess.call( arg_list )
-
+    p = read_from_subprocess( arg_list )
+    if not p:
+        raise RuntimeError( "Failed to make proxy!" )
+    
     # read path
     new_proxy = None
     try:
-        new_proxy     = read_from_subprocess( 'voms-proxy-info --path'.split() )[0]
+        new_proxy = read_from_subprocess( 'voms-proxy-info --path'.split() )[0]
     except IndexError:
         pass
 
-    if new_proxy is not None and os.path.exists( new_proxy ):
+    if new_proxy and os.path.exists( new_proxy ):
         os.environ["X509_USER_PROXY"] = new_proxy
         print( "Successfully created new proxy %s"%new_proxy )
         return new_proxy
