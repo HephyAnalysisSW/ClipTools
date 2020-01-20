@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# runs a script within cmssw, no matter if you are outside or inside a container
+# Usage: cmssw CODE_YOU_WANT_TO_RUN
+
+
+# run if you are within singularity
+if [ -d "/.singularity.d/" ]; then
+    ${@}
+    exit
+fi
+
+mkdir tmp_singularity
+echo "#!/bin/bash"                               >  tmp_singularity/exec.sh
+echo 'eval $(/opt/cms/common/scram runtime -sh)' >> tmp_singularity/exec.sh
+echo "${@}"                                      >> tmp_singularity/exec.sh
+
+# run if you are outside of singularity
+module load singularity/3.4.1
+singularity exec /mnt/hephy/cms/test/cmssw_CMSSW_10_2_18.sif sh tmp_singularity/exec.sh
+
+rm -r tmp_singularity
