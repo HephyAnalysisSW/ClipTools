@@ -1,20 +1,5 @@
 import os
-import commands
-import subprocess
-
-def read_from_subprocess(arglist):
-    ''' Read line by line from subprocess
-    '''
-
-    proc = subprocess.Popen(arglist,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    res = []
-    while True:
-        l = proc.stdout.readline()
-        if l !=  '':
-            res.append( l.rstrip() )
-        else:
-            break
-    return res
+from clipHelpers import read_from_subprocess
 
 def renew_proxy( filename = None, rfc = False, request_time = 192, min_time = 0):
 

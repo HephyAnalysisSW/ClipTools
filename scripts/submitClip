@@ -18,7 +18,7 @@ import os, time, re, sys
 import shlex, uuid, time, datetime
 import shutil
 
-from proxyHelper import read_from_subprocess
+from clipHelpers import read_from_subprocess
 
 # Defaults
 home          = os.getenv("HOME")
@@ -122,7 +122,9 @@ def getProxy():
     for out in res:
         if out and not "find a valid proxy" in out: print out
         if "error" in out.lower(): error = True
-    if error: sys.exit(1)
+    if error:
+        logger.info( "Error in getting proxy! Exiting..." )
+        sys.exit(1)
     logger.info( "Using proxy certificate %s", proxy )
     proxy_cmd = "export X509_USER_PROXY=%s"%proxy
     return proxy_cmd
