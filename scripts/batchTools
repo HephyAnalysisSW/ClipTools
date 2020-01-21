@@ -1,0 +1,94 @@
+#!/usr/bin/python
+
+""" 
+selects batch jobs in the queue by criteria and either displays them like squeue (default), gives the number of jobs (--nls), gives infos to the jobs (--info)  or removes them (--rm)
+filter criteria are:
+--title TITLE: one or list of titles (more than one are or-ed), wildcards at the beginning or end are accepted. e.g. --title mc* or --title *est or --title *16* or --title mc16 *17 data*
+--jobID JOBID: one or list of jobIDs (more than one are or-ed) or range separated with -, wildcards at the beginning or end are accepted. e.g. --jobID 95514* or --jobID *1973 or --jobId 95514 95573* or --jobID 9553*-9666*
+take care of sub-jobs either with wildcards 95524* or explicitly 95524_1
+--partition PARTITION: filter by partition, either c, m or g or a list of partitions. e.g. --partition m c
+--status STATUS: filter by status, either R (running), PD (pending) or CG (killed) or a list of stati. e.g. --status R PD
+"""
+
+# Standard imports
+import os, sys
+
+from helpers import get_batchInfo
+
+# Defaults
+user          = os.getenv("USER")
+hostname      = os.getenv("HOSTNAME")
+inSingularity = os.path.exists("/.singularity.d/")
+
+if not "clip" in hostname:
+    raise Exception( "Running batchTools outside of clip is not supported!" )
+
+if inSingularity:
+    raise Exception( "Running batchTools inside of Singularity is not supported!" )
+
+logChoices = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET', 'SYNC']
+pChoices  = ["c", "m", "g"]
+sChoices  = ["R", "PD", "CG"]
+
+import argparse
+argParser = argparse.ArgumentParser(description = "Argument parser for batchTools")
+argParser.add_argument('--logLevel',      default="INFO",      choices=logChoices,              help="Log level for logging" )
+argParser.add_argument('--nls',           action='store_true',                                  help="list number of jobs!")
+argParser.add_argument('--rm',            action='store_true',                                  help="removes jobs")
+argParser.add_argument('--info',          action='store_true',                                  help="print info to job")
+argParser.add_argument('--title',         action='store',      type=str, default=None, nargs="*",                    help="filter output by title, wildcards in beginning and end accepted, multiple arguments are or-ed")
+argParser.add_argument('--jobID',         action='store',      type=str, default=None, nargs="*",                    help="filter output by jobIDs, wildcards in beginning and end accepted, range combined with -, range w/ sub-jobs XX_01 not supported, multiple arguments are or-ed")
+argParser.add_argument('--partition',     action='store',      type=str, default=None, nargs="*", choices=pChoices,  help="filter output by partition, multiple arguments are or-ed")
+argParser.add_argument('--status',        action='store',      type=str, default=None, nargs="*", choices=sChoices,  help="filter output by status, R: running, PD: pending, CG: killed, multiple arguments are or-ed")
+args = argParser.parse_args()
+
+# Logger
+import logger
+logger = logger.get_logger( args.logLevel, logFile=None )
+
+def formatJobToString( job ):
+    jobID = job["jobID"] if "_" in job["jobID"] else "%s\t"%job["jobID"] # weird formating for print output
+    return "\t" + "\t".join( [ jobID, job["partition"], job["title"], user, job["status"], job["time"], job["nNodes"], job["worker"]] )
+
+def jobToJobRange( job ):
+    if "-" in job and len(job.split("-")) == 2:
+        fromID, toID = job.split("-")
+        jobs         = map( str, range( int(fromID.rstrip("*")), int(toID.rstrip("*"))+1 ) )
+        if "*" in job:
+            jobs = [ j+"*" for j in jobs ]
+        return jobs
+    elif "-" in job and len(job.split("-")) != 2:
+        raise Exception( "Don't know what to do with job %s"%job )
+    else:
+        return [job]
+
+# Check and format input
+if args.jobID:
+    jobIDs = []
+    for job in args.jobID:
+            jobIDs += jobToJobRange( job )
+    args.jobID = jobIDs
+
+jobs = get_batchInfo( jobID=args.jobID, partition=args.partition, title=args.title, user=user, status=args.status )
+
+if args.nls:
+    # squeue | wc -l
+    print len(jobs)
+
+elif args.info:
+    # remove jobs
+    for job in jobs:
+        logger.info("Info to jobID %s"%job["jobID"] )
+        os.system( "jobinfo %s"%job["jobID"] )
+        print
+
+elif args.rm:
+    # remove jobs
+    for job in jobs:
+        logger.info("Killing jobID %s"%job["jobID"] )
+        os.system( "scancel %s"%job["jobID"] )
+
+else:
+    # Print squeue per default
+    for job in jobs:
+        print formatJobToString( job )
