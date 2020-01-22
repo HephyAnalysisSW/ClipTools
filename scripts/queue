@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """ 
-selects batch jobs in the queue by criteria and either displays them like squeue (default), gives the number of jobs (--nls), gives infos to the jobs (--info)  or removes them (--rm)
+selects batch jobs in the queue by criteria and either displays them like squeue (default), gives the number of jobs (--n), gives infos to the jobs (--info)  or removes them (--rm)
 filter criteria are:
 --title TITLE: one or list of titles (more than one are or-ed), wildcards at the beginning or end are accepted. e.g. --title mc* or --title *est or --title *16* or --title mc16 *17 data*
 --jobID JOBID: one or list of jobIDs (more than one are or-ed) or range separated with -, wildcards at the beginning or end are accepted. e.g. --jobID 95514* or --jobID *1973 or --jobId 95514 95573* or --jobID 9553*-9666*
@@ -13,7 +13,7 @@ take care of sub-jobs either with wildcards 95524* or explicitly 95524_1
 # Standard imports
 import os, sys
 
-from helpers import get_batchInfo
+from clipHelpers import get_batchInfo
 
 # Defaults
 user          = os.getenv("USER")
@@ -33,7 +33,7 @@ sChoices  = ["R", "PD", "CG"]
 import argparse
 argParser = argparse.ArgumentParser(description = "Argument parser for batchTools")
 argParser.add_argument('--logLevel',      default="INFO",      choices=logChoices,              help="Log level for logging" )
-argParser.add_argument('--nls',           action='store_true',                                  help="list number of jobs!")
+argParser.add_argument('--n',             action='store_true',                                  help="list number of jobs!")
 argParser.add_argument('--rm',            action='store_true',                                  help="removes jobs")
 argParser.add_argument('--info',          action='store_true',                                  help="print info to job")
 argParser.add_argument('--title',         action='store',      type=str, default=None, nargs="*",                    help="filter output by title, wildcards in beginning and end accepted, multiple arguments are or-ed")
@@ -71,7 +71,7 @@ if args.jobID:
 
 jobs = get_batchInfo( jobID=args.jobID, partition=args.partition, title=args.title, user=user, status=args.status )
 
-if args.nls:
+if args.n:
     # squeue | wc -l
     print len(jobs)
 
