@@ -77,8 +77,8 @@ if len(args) != 1 and not options.jobInfo and not options.status:
 if options.cmssw == "None":
     options.cmssw = None
 
-if options.cmssw and not os.path.exists("/mnt/hephy/cms/test/cmssw_CMSSW_%s.sif"%options.cmssw):
-    raise Exception("Singularity container for CMSSW version %s not found: /mnt/hephy/cms/test/cmssw_CMSSW_%s.sif"%(options.cmssw,options.cmssw))
+if options.cmssw and not os.path.exists("/mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%options.cmssw):
+    raise Exception("Singularity container for CMSSW version %s not found: /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%(options.cmssw,options.cmssw))
 
 if options.noLog:
     options.output = "/tmp/%s"%user
@@ -187,9 +187,9 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     submitCommands += [""]
 
     if options.cmssw:
-        submitCommands += ["echo Loading CMSSW version %s from singularity container /mnt/hephy/cms/test/cmssw_CMSSW_%s.sif"%(options.cmssw, options.cmssw)]
+        submitCommands += ["echo Loading CMSSW version %s from singularity container /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%(options.cmssw, options.cmssw)]
         submitCommands += ["module load singularity/3.4.1"]
-        submitCommands += ["singularity exec /mnt/hephy/cms/test/cmssw_CMSSW_%s.sif sh %s"%(options.cmssw, script)]
+        submitCommands += ["singularity exec /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif sh %s"%(options.cmssw, script)]
 
     else:
         submitCommands += ["sh " + script]

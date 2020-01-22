@@ -19,4 +19,4 @@ fi
 
 # renew proxy outside of singularity
 module load singularity/3.4.1
-singularity exec /mnt/hephy/cms/test/cmssw_CMSSW_${cmssw}.sif python -c 'import os; from proxyHelper import renew_proxy; renew_proxy(filename=os.getenv("X509_USER_PROXY"),request_time=192,min_time=os.getenv("min_proxyTime"))'
+singularity exec /mnt/hephy/cms/container/cmssw_CMSSW_${cmssw}.sif python -c 'import os; from proxyHelper import renew_proxy; renew_proxy(filename=os.getenv("X509_USER_PROXY"),request_time=192,min_time=os.getenv("min_proxyTime"))'
