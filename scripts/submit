@@ -81,7 +81,7 @@ if options.cmssw and not os.path.exists("/mnt/hephy/cms/container/cmssw_CMSSW_%s
     raise Exception("Singularity container for CMSSW version %s not found: /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%(options.cmssw,options.cmssw))
 
 if options.noLog:
-    options.output = "/tmp/%s"%user
+    options.output = "/dev/null"
 
 if options.walltime:
     # check format
@@ -156,12 +156,17 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     submitCommands += [""]
     submitCommands += ["#SBATCH -J %s"%options.title]
     submitCommands += ["#SBATCH -D %s"%cwd]
-    if nJobs > 1:
-        submitCommands += ["#SBATCH -o %s/batch.%%A-%%a.%%J.out"%(options.output)]
-        submitCommands += ["#SBATCH -e %s/batch.%%A-%%a.%%J.err"%(options.output)]
+
+    if options.noLog:
+        submitCommands += ["#SBATCH -o /dev/null"]
+        submitCommands += ["#SBATCH -e /dev/null"]
     else:
-        submitCommands += ["#SBATCH -o %s/batch.%%J.out"%(options.output)]
-        submitCommands += ["#SBATCH -e %s/batch.%%J.err"%(options.output)]
+        if nJobs > 1:
+            submitCommands += ["#SBATCH -o %s/batch.%%A-%%a.%%J.out"%(options.output)]
+            submitCommands += ["#SBATCH -e %s/batch.%%A-%%a.%%J.err"%(options.output)]
+        else:
+            submitCommands += ["#SBATCH -o %s/batch.%%J.out"%(options.output)]
+            submitCommands += ["#SBATCH -e %s/batch.%%J.err"%(options.output)]
     submitCommands += [""]
     if options.nNodes:
         submitCommands += ["#SBATCH --nodes=%i"%options.nNodes]
@@ -267,7 +272,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # create logfile output dir
-    if not os.path.isdir( options.output ):
+    if not options.noLog and not os.path.isdir( options.output ):
         os.makedirs( options.output )
 
     # create logfile input directory

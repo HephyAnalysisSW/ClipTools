@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 def read_from_subprocess( arglist ):
@@ -33,7 +34,7 @@ def filter_with_wildcards( str, comp ):
 
 def get_batchInfo( jobID=None, partition=None, title=None, user=None, status=None ):
 
-    jobs = format_batchInfo( read_from_subprocess( ["squeue"] )[1:] )
+    jobs = format_batchInfo( read_from_subprocess( ["squeue", "-u", os.getenv("USER")] )[1:] )
 
     if jobID and isinstance( jobID, str ):
         jobs = filter( lambda job: filter_with_wildcards(job["jobID"], jobID), jobs )

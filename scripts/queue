@@ -11,7 +11,7 @@ take care of sub-jobs either with wildcards 95524* or explicitly 95524_1
 """
 
 # Standard imports
-import os, sys
+import os, sys, operator
 
 from clipHelpers import get_batchInfo
 
@@ -21,19 +21,20 @@ hostname      = os.getenv("HOSTNAME")
 inSingularity = os.path.exists("/.singularity.d/")
 
 if not "clip" in hostname:
-    raise Exception( "Running batchTools outside of clip is not supported!" )
+    raise Exception( "Running queue outside of clip is not supported!" )
 
 if inSingularity:
-    raise Exception( "Running batchTools inside of Singularity is not supported!" )
+    raise Exception( "Running queue inside of Singularity is not supported!" )
 
 logChoices = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET', 'SYNC']
 pChoices  = ["c", "m", "g"]
 sChoices  = ["R", "PD", "CG"]
 
 import argparse
-argParser = argparse.ArgumentParser(description = "Argument parser for batchTools")
+argParser = argparse.ArgumentParser(description = "Argument parser for queue")
 argParser.add_argument('--logLevel',      default="INFO",      choices=logChoices,              help="Log level for logging" )
 argParser.add_argument('--n',             action='store_true',                                  help="list number of jobs!")
+argParser.add_argument('--nInfo',         action='store_true',                                  help="list number of jobs grouped per title!")
 argParser.add_argument('--rm',            action='store_true',                                  help="removes jobs")
 argParser.add_argument('--info',          action='store_true',                                  help="print info to job")
 argParser.add_argument('--title',         action='store',      type=str, default=None, nargs="*",                    help="filter output by title, wildcards in beginning and end accepted, multiple arguments are or-ed")
@@ -48,7 +49,8 @@ logger = logger.get_logger( args.logLevel, logFile=None )
 
 def formatJobToString( job ):
     jobID = job["jobID"] if "_" in job["jobID"] else "%s\t"%job["jobID"] # weird formating for print output
-    return "\t" + "\t".join( [ jobID, job["partition"], job["title"], user, job["status"], job["time"], job["nNodes"], job["worker"]] )
+    time  = job["time"]  if len(job["time"]) > 7 else "%s\t"%job["time"] # weird formating for print output
+    return "\t" + "\t".join( [ jobID, job["partition"], job["title"], user, job["status"], time, job["nNodes"], job["worker"]] )
 
 def jobToJobRange( job ):
     if "-" in job and len(job.split("-")) == 2:
@@ -74,6 +76,19 @@ jobs = get_batchInfo( jobID=args.jobID, partition=args.partition, title=args.tit
 if args.n:
     # squeue | wc -l
     print len(jobs)
+
+elif args.nInfo:
+    listOfTitles = set( map( lambda job: job["title"], jobs ))
+    nJobs        = { t:len( filter( lambda j: j["title"] == t, jobs ) ) for t in listOfTitles }
+    nJobs        = sorted( nJobs.items(), key=operator.itemgetter(1))
+    nStati       = { s:len( filter( lambda j: j["status"] == s, jobs ) ) for s in ["R","PD"] }
+
+    print "total jobs: %i"%len(jobs)
+    print "running jobs: %i"%nStati["R"]
+    print "pending jobs: %i"%nStati["PD"]
+    print
+    for t, nj in nJobs:
+        print "nJobs with title %s: %i"%(t, nj)
 
 elif args.info:
     # remove jobs

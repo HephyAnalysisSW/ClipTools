@@ -14,7 +14,7 @@ if [ -z "${CERN_USER}" ]; then
     echo "https://cernbox-manual.web.cern.ch/cernbox-manual/en/web/personal_website_content.html#create_personal_space"
     echo "to create a webpage and view your plots!"
 else
-    echo "Syncing the directory ${HOME}/www/ to /eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/"
-    rsync -avuq ${HOME}/www/* ${CERN_USER}@lxplus.cern.ch:/eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/
+    echo "Syncing the directory /mnt/hephy/cms/${USER}/www/ to /eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/"
+    rsync -avuq /mnt/hephy/cms/${USER}/www/* ${CERN_USER}@lxplus.cern.ch:/eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/
 fi
 
