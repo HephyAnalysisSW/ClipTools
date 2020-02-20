@@ -7,13 +7,11 @@ filter criteria are:
 --jobID JOBID: one or list of jobIDs (more than one are or-ed) or range separated with -, wildcards at the beginning or end are accepted. e.g. --jobID 95514* or --jobID *1973 or --jobId 95514 95573* or --jobID 9553*-9666*
 take care of sub-jobs either with wildcards 95524* or explicitly 95524_1
 --partition PARTITION: filter by partition, either c, m or g or a list of partitions. e.g. --partition m c
---status STATUS: filter by status, either R (running), PD (pending) or CG (killed) or a list of stati. e.g. --status R PD
+--status STATUS: filter by status, either R (running), PD (pending) or CG (completing) or a list of stati. e.g. --status R PD
 """
 
 # Standard imports
 import os, sys, operator
-
-from clipHelpers import get_batchInfo
 
 # Defaults
 user          = os.getenv("USER")
@@ -25,6 +23,8 @@ if not "clip" in hostname:
 
 if inSingularity:
     raise Exception( "Running queue inside of Singularity is not supported!" )
+
+from clipHelpers import get_batchInfo
 
 logChoices = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET', 'SYNC']
 pChoices  = ["c", "m", "g"]
@@ -40,7 +40,7 @@ argParser.add_argument('--info',          action='store_true',                  
 argParser.add_argument('--title',         action='store',      type=str, default=None, nargs="*",                    help="filter output by title, wildcards in beginning and end accepted, multiple arguments are or-ed")
 argParser.add_argument('--jobID',         action='store',      type=str, default=None, nargs="*",                    help="filter output by jobIDs, wildcards in beginning and end accepted, range combined with -, range w/ sub-jobs XX_01 not supported, multiple arguments are or-ed")
 argParser.add_argument('--partition',     action='store',      type=str, default=None, nargs="*", choices=pChoices,  help="filter output by partition, multiple arguments are or-ed")
-argParser.add_argument('--status',        action='store',      type=str, default=None, nargs="*", choices=sChoices,  help="filter output by status, R: running, PD: pending, CG: killed, multiple arguments are or-ed")
+argParser.add_argument('--status',        action='store',      type=str, default=None, nargs="*", choices=sChoices,  help="filter output by status, R: running, PD: pending, CG: completing, multiple arguments are or-ed")
 args = argParser.parse_args()
 
 # Logger
@@ -79,13 +79,14 @@ if args.n:
 
 elif args.nInfo:
     listOfTitles = set( map( lambda job: job["title"], jobs ))
-    nJobs        = { t:len( filter( lambda j: j["title"] == t, jobs ) ) for t in listOfTitles }
+    nJobs        = dict( zip( listOfTitles, [ len(filter( lambda j: j["title"] == t, jobs )) for t in listOfTitles] ) ) #{ t:len( list( filter( lambda j: j["title"] == t, jobs ) ) ) for t in listOfTitles }
     nJobs        = sorted( nJobs.items(), key=operator.itemgetter(1))
-    nStati       = { s:len( filter( lambda j: j["status"] == s, jobs ) ) for s in ["R","PD"] }
+    nStati       = dict( zip( ["R", "PD", "CG"], [ len(filter( lambda j: j["status"] == s, jobs )) for s in ["R","PD","CG"]] ) ) #{ s:len( list( filter( lambda j: j["status"] == s, jobs ) ) ) for s in ["R","PD"] }
 
     print "total jobs: %i"%len(jobs)
     print "running jobs: %i"%nStati["R"]
     print "pending jobs: %i"%nStati["PD"]
+    print "completing jobs: %i"%nStati["CG"]
     print
     for t, nj in nJobs:
         print "nJobs with title %s: %i"%(t, nj)
