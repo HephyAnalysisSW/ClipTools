@@ -33,10 +33,10 @@ batch_output  = "/mnt/hephy/cms/%s/batch_output"%(user)
 batch_tmp     = "/mnt/hephy/cms/%s/batch_input"%(user)
 
 if not "clip" in hostname:
-    raise Exception( "Running submitClip.py outside of clip is not supported!" )
+    raise Exception( "Running submit outside of clip is not supported!" )
 
 if inSingularity:
-    raise Exception( "Running submitClip.py inside of Singularity is not supported!" )
+    raise Exception( "Running submit inside of Singularity is not supported!" )
 
 logChoices       = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET', 'SYNC']
 queueChoices     = ["short", "medium", "long"] # long: 14 days, medium: 2 days, short: 8h
