@@ -17,4 +17,12 @@ else
     echo "Syncing the directory /mnt/hephy/cms/${USER}/www/ to /eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/"
     rsync -avuq /mnt/hephy/cms/${USER}/www/* ${CERN_USER}@lxplus.cern.ch:/eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/
 fi
-
+#else
+#    echo "Syncing the directory /mnt/hephy/cms/${USER}/www/ to /eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/"
+#    if [ $# -eq 0 ]
+#      then
+#        rsync -avum --include="*/" --include "*.php" --include "*.pdf" --include "*.png" --exclude="*" /mnt/hephy/cms/${USER}/www/* ${CERN_USER}@lxplus.cern.ch:/eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/
+#    else
+#        rsync -avum --include="*/" --include "*.php" --include "*.pdf" --include "*.png" --exclude="*" /mnt/hephy/cms/${USER}/www/$1/* ${CERN_USER}@lxplus.cern.ch:/eos/user/$(echo ${CERN_USER} | head -c 1)/${CERN_USER}/www/$1/
+#    fi
+#fi
