@@ -227,6 +227,7 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
 
     if options.cmssw:
         if options.cmssw == "local":
+            scriptCommands += ["source /cvmfs/cms.cern.ch/cmsset_default.sh"]
             scriptCommands += ["eval `scramv1 runtime -sh`"]
         else:
             scriptCommands += ["eval $(/opt/cms/common/scram runtime -sh)"]
