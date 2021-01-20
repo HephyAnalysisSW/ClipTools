@@ -57,6 +57,7 @@ logger.info( "Got %i files and split into %i jobs of %3.2f files/job on average.
 for chunk in chunks:
     pass
 
+
 # Deal with the config
 logger.info("Config: %s", args.cfg)
 import importlib
