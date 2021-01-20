@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """ 
     Usage:
@@ -61,7 +61,7 @@ parser.add_option("--nCPUs"  ,            dest="nCPUs",              default=Non
 parser.add_option("--nGPUs"  ,            dest="nGPUs",              default=None,       type=int,                 help="Number of GPUs (if --partition g) per task" )
 parser.add_option("--memory",             dest="memory",             default=None,       type=int,                 help="Request memory in GB. Default is 4GB/core")
 parser.add_option("--walltime",           dest="walltime",           default=None,       type=str,                 help="Walltime in format DD-HH:MM:SS or HH:MM:SS. Default is 8h!")
-parser.add_option("--cmssw",              dest="cmssw",              default="None",     type=str,                 help="Load CMSSW version from singularity container in the format XX_XX_XX. Default is 10_2_18. Set it to None to run without CMSSW!")
+parser.add_option("--cmssw",              dest="cmssw",              default="local",    type=str,                 help="Load CMSSW version from singularity container in the format XX_XX_XX. Default is 10_2_18. Set it to None to run without CMSSW!")
 parser.add_option('--noLog',              dest="noLog",                                  action='store_true',      help="Do not create a log file")
 
 (options,args) = parser.parse_args()
@@ -77,7 +77,7 @@ if len(args) != 1 and not options.jobInfo and not options.status:
 if options.cmssw == "None":
     options.cmssw = None
 
-if options.cmssw and not os.path.exists("/mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%options.cmssw):
+if options.cmssw and options.cmssw != "local" and not os.path.exists("/mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%options.cmssw):
     raise Exception("Singularity container for CMSSW version %s not found: /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%(options.cmssw,options.cmssw))
 
 if options.noLog:
@@ -191,9 +191,9 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     submitCommands += ["echo"]
     submitCommands += [""]
 
-    if options.cmssw:
+    if options.cmssw and options.cmssw != "local":
         submitCommands += ["echo Loading CMSSW version %s from singularity container /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif"%(options.cmssw, options.cmssw)]
-        submitCommands += ["module load singularity/3.4.1"]
+#        submitCommands += ["module load singularity/3.4.1"]
         submitCommands += ["singularity exec /mnt/hephy/cms/container/cmssw_CMSSW_%s.sif sh %s"%(options.cmssw, script)]
 
     else:
@@ -208,9 +208,9 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
         submitCommands += ["rm %s"%script]
         submitCommands += ["echo Removed execution file: %s"%script]
 
-    submitCommands += ["echo"]
-    submitCommands += ["echo Job Statistics:"]
-    submitCommands += ["seff $SLURM_JOB_ID"]
+#    submitCommands += ["echo"]
+#    submitCommands += ["echo Job Statistics:"]
+#    submitCommands += ["seff $SLURM_JOB_ID"]
 
     with open( file, "w" ) as f:
         for cmd in submitCommands:
@@ -226,7 +226,10 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     scriptCommands += [""]
 
     if options.cmssw:
-        scriptCommands += ["eval $(/opt/cms/common/scram runtime -sh)"]
+        if options.cmssw == "local":
+            scriptCommands += ["eval `scramv1 runtime -sh`"]
+        else:
+            scriptCommands += ["eval $(/opt/cms/common/scram runtime -sh)"]
 
         if proxy_cmd:
             scriptCommands += [proxy_cmd]
