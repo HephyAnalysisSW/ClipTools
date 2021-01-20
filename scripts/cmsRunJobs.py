@@ -71,7 +71,7 @@ else:
 targetDir = os.path.join( args.targetDir, args.DASName.lstrip('/').replace('/','_') )
 if not os.path.exists( targetDir ):
     os.makedirs( targetDir )
-    logger.info( 'Created output directory', targetDir )
+    logger.info( 'Created output directory %s', targetDir )
 
 user          = os.getenv("USER")
 batch_tmp     = "/scratch/%s/batch_input/"%(user)
@@ -91,6 +91,9 @@ with file('jobs.sh', 'a+') as job_file:
         for out_name, output_module in module.process.outputModules.iteritems():
             output_filename = os.path.join(targetDir, '%s_%i.root'%(out_name, i_chunk))
             output_module.fileName  = cms.untracked.string(output_filename)
+        # set maxEvents to -1
+        if hasattr( module.process, "maxEvents" ):
+            module.process.maxEvents.input = cms.untracked.int32(-1)
         # dump cfg
         out_cfg_name = os.path.join( batch_tmp, str(uuid.uuid4()).replace('-','_')+'.py' )
         with file(out_cfg_name, 'w') as out_cfg:
