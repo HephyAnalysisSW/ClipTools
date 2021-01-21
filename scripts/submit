@@ -203,11 +203,11 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     if nJobs > 1:
         submitCommands += ["if [ $SLURM_ARRAY_TASK_ID -eq %i ]; then"%(nJobs-1)]
         submitCommands += ["    rm %s"%script]
-        submitCommands += ["    echo Removed execution file: %s"%script]
+        submitCommands += ["    echo Removed execution file: '%s'"%script]
         submitCommands += ["fi"]
     else:
         submitCommands += ["rm %s"%script]
-        submitCommands += ["echo Removed execution file: %s"%script]
+        submitCommands += ["echo Removed execution file: '%s'"%script]
 
 #    submitCommands += ["echo"]
 #    submitCommands += ["echo Job Statistics:"]
@@ -243,13 +243,13 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
     scriptCommands += ["echo"]
     if options.nTasks:
         scriptCommands += ["echo Executing user command for each of the %i tasks"%options.nTasks]
-        scriptCommands += ["echo srun -l %s"%command]
+        scriptCommands += ["echo 'srun -l %s'"%command]
         scriptCommands += ["echo"]
         scriptCommands += ["srun -l %s"%command]
 
     else:
         scriptCommands += ["echo Executing user command:"]
-        scriptCommands += ["echo %s"%command]
+        scriptCommands += ["echo '%s'"%command]
         scriptCommands += ["echo"]
         scriptCommands += [command]
 
@@ -262,7 +262,7 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
 
     scriptCommands += ["echo"]
     scriptCommands += ["echo Done executing command:"]
-    scriptCommands += ["echo %s"%command]
+    scriptCommands += ["echo '%s'"%command]
 
     with open( script, "w" ) as f:
         for cmd in scriptCommands:

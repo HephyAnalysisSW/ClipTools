@@ -87,17 +87,21 @@ with file('jobs.sh', 'a+') as job_file:
     for i_chunk, chunk in enumerate(chunks):
         # set input
         module.process.source.fileNames = cms.untracked.vstring(map(lambda filename: args.redirector+filename, chunk))
+        move_cmds = []
         # set output
         for out_name, output_module in module.process.outputModules.iteritems():
-            output_filename = os.path.join(targetDir, '%s_%i.root'%(out_name, i_chunk))
-            output_module.fileName  = cms.untracked.string(output_filename)
+            output_filename = '%s_%i.root'%(out_name, i_chunk)
+            output_module.fileName  = cms.untracked.string(os.path.join('/tmp/', output_filename))
+            move_cmds.append( (os.path.join('/tmp/', output_filename), os.path.join(targetDir, output_filename)) )
         # set maxEvents to -1
         if hasattr( module.process, "maxEvents" ):
-            module.process.maxEvents.input = cms.untracked.int32(-1)
+            module.process.maxEvents.input = cms.untracked.int32(1)
         # dump cfg
         out_cfg_name = os.path.join( batch_tmp, str(uuid.uuid4()).replace('-','_')+'.py' )
         with file(out_cfg_name, 'w') as out_cfg:
             out_cfg.write(module.process.dumpPython())
         logger.info("Written %s", out_cfg_name)
 
-        job_file.write('cmsRun %s\n'%out_cfg_name)
+        move_string =  ";" if len(move_cmds)>0 else ""
+        move_string += ";".join(["mv %s %s"%move_cmd for move_cmd in move_cmds])
+        job_file.write('cmsRun %s'%out_cfg_name + move_string + '\n')
