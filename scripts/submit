@@ -2,11 +2,11 @@
 
 """ 
     Usage:
-    submitClip.py --OPTIONS "FILE"  :  Will submit a batch job for each command line in FILE.
+    submit --OPTIONS "FILE"  :  Will submit a batch job for each command line in FILE.
     If the commandline ends with #SPLIT2, where 2 can be any number, an array job will be executed with (2) jobs.
     Each jobs gets the additional command options --nJobs 2 --job 0 and --nJobs 2 --job 1
     
-    submitClip.py --OPTIONS "COMMAND"  :  Will submit a batch job for the command.
+    submit --OPTIONS "COMMAND"  :  Will submit a batch job for the command.
     
     default runs with CMSSW, set --cmssw None for running w/o cmssw
 
