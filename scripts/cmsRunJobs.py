@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+#Standard imports
+import math
+
 def get_parser():
     import argparse
     argParser = argparse.ArgumentParser(description = "Argument parser for SLURM cmsRun submission")
@@ -11,7 +14,8 @@ def get_parser():
     argParser.add_argument('--targetDir',   action='store',         nargs='?',  type=str, required=True, help="output director" )
     argParser.add_argument('--cfg',         action='store',         nargs='?',  type=str, help="Which config." )
     argParser.add_argument('--limit',       action='store',         nargs='?',  type=int, default=0, help="Limit DAS query?" )
-    argParser.add_argument('--split',       action='store',         nargs='?',  type=int, help="Number of jobs." )
+    argParser.add_argument('--n_split',     action='store',         nargs='?',  type=int, help="Number of jobs." )
+    argParser.add_argument('--n_files',     action='store',         nargs='?',  type=int, default=0, help="Number of files per job." )
 
     return argParser
 
@@ -19,6 +23,7 @@ args = get_parser().parse_args()
 
 # general imports
 import os
+import sys
 
 # Logger
 import logger
@@ -63,10 +68,12 @@ def partition(lst, n):
     return [ lst[int(round(n_division * i)): int(round(n_division * (i + 1)))] for i in xrange(n) ]
 
 # 1 job / file as default
-if args.split is None:
-    args.split=len(files)
-chunks = partition( files, min(args.split , len(files) ) ) 
-logger.info( "Got %i files and split into %i jobs of %3.2f files/job on average." % ( len(files), len(chunks), len(files)/float(len(chunks))) )
+if args.n_split is None:
+    args.n_split=len(files)
+if args.n_files>0:
+    args.n_split = int(math.ceil(len(files)/args.n_files))
+chunks = partition( files, min(args.n_split , len(files) ) ) 
+logger.info( "Got %i files and n_split into %i jobs of %3.2f files/job on average." % ( len(files), len(chunks), len(files)/float(len(chunks))) )
 for chunk in chunks:
     pass
 
