@@ -8,11 +8,11 @@ def get_parser():
     argParser = argparse.ArgumentParser(description = "Argument parser for SLURM cmsRun submission")
 
     argParser.add_argument('--logLevel',    action='store',         nargs='?',  choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'TRACE', 'NOTSET'],   default='INFO', help="Log level for logging" )
-    argParser.add_argument('--input',       action='store',         nargs='?',  type=str, required=True, help="dbs:<DAS name> or directory" )
+    argParser.add_argument('--input',       action='store',         nargs='?',  type=str, required=True, help="dbs:<DAS name>, local directory, or file with filenames" )
     argParser.add_argument('--instance',    action='store',         nargs='?',  type=str, default='global', help="DAS instance." )
     argParser.add_argument('--redirector',  action='store',         nargs='?',  type=str, default='root://cms-xrd-global.cern.ch/', help="redirector for xrootd" )
     argParser.add_argument('--targetDir',   action='store',         nargs='?',  type=str, required=True, help="output director" )
-    argParser.add_argument('--cfg',         action='store',         nargs='?',  type=str, help="Which config." )
+    argParser.add_argument('--cfg',         action='store',         nargs='?',  type=str, required=True, help="Which config." )
     argParser.add_argument('--limit',       action='store',         nargs='?',  type=int, default=0, help="Limit DAS query?" )
     argParser.add_argument('--n_split',     action='store',         nargs='?',  type=int, help="Number of jobs." )
     argParser.add_argument('--n_files',     action='store',         nargs='?',  type=int, default=0, help="Number of files per job." )
@@ -32,6 +32,7 @@ logger = logger.get_logger( args.logLevel, logFile=None )
 # Deal with the sample
 files = []
 # get from dbs
+subDirName = ''
 if args.input.startswith('dbs:'):
     DASName = args.input[4:] 
     # name for the subdirectory
@@ -51,9 +52,14 @@ if args.input.startswith('dbs:'):
     for line in dbsOut:
         if line.startswith('/store/'):
             files.append(line.rstrip())
+elif os.path.exists( args.input ):
+    with open( args.input, 'r') as inputfile:
+        for line in inputfile.readlines():
+            line = line.rstrip('\n').rstrip()
+            if line.endswith('.root'):
+                files.append(line)
 #get from directory
 else:
-    subDirName = ''
     for filename in os.listdir( args.input ):
         if filename.endswith('.root'):
             files.append(os.path.join( args.input, filename ))

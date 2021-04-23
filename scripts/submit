@@ -61,7 +61,7 @@ parser.add_option("--nTasks" ,            dest="nTasks",             default=Non
 parser.add_option("--nCPUs"  ,            dest="nCPUs",              default=None,       type=int,                 help="Number of CPUs per task" )
 parser.add_option("--nGPUs"  ,            dest="nGPUs",              default=None,       type=int,                 help="Number of GPUs (if --partition g) per task" )
 parser.add_option("--memory",             dest="memory",             default=None,       type=int,                 help="Request memory in GB. Default is 4GB/core")
-parser.add_option("--walltime",           dest="walltime",           default=None,       type=str,                 help="Walltime in format DD-HH:MM:SS or HH:MM:SS. Default is 8h!")
+parser.add_option("--walltime",           dest="walltime",           default="08:00:00", type=str,                 help="Walltime in format DD-HH:MM:SS or HH:MM:SS. Default is 8h!")
 parser.add_option("--cmssw",              dest="cmssw",              default="local",    type=str,                 help="Load CMSSW version from singularity container in the format XX_XX_XX. Default is 10_2_18. Set it to None to run without CMSSW!")
 parser.add_option('--noLog',              dest="noLog",                                  action='store_true',      help="Do not create a log file")
 
