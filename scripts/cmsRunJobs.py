@@ -52,14 +52,14 @@ if args.input.startswith('dbs:'):
     for line in dbsOut:
         if line.startswith('/store/'):
             files.append(line.rstrip())
-elif os.path.exists( args.input ):
+elif os.path.exists( args.input ) and os.path.isfile( args.input ):
     with open( args.input, 'r') as inputfile:
         for line in inputfile.readlines():
             line = line.rstrip('\n').rstrip()
             if line.endswith('.root'):
                 files.append(line)
 #get from directory
-else:
+elif os.path.exists( args.input ) and os.path.isdir( args.input ):
     for filename in os.listdir( args.input ):
         if filename.endswith('.root'):
             files.append(os.path.join( args.input, filename ))
