@@ -104,7 +104,7 @@ if options.walltime:
     if   walltime > 1209600: raise Exception("No queue supports such a long walltime!") # > 14 days
     elif walltime > 172800:  options.queue = "long"   # > 2 days
     elif walltime > 28800:   options.queue = "medium" # > 8 hours
-    else:                    options.queue = "short"  # <= 8 hours
+    else:                    options.queue = "short" if not options.queue else options.queue  # <= 8 hours
     if options.dpm: os.environ["min_proxyTime"] = str(int(walltime/3600.)) # minimum proxy time in hours
 
 if options.nGPUs:
@@ -183,6 +183,7 @@ def make_batch_job( file, script, command, proxy_cmd, nJobs=1 ):
         submitCommands += ["#SBATCH --time=%s"%options.walltime]
     if options.queue:
         submitCommands += ["#SBATCH --qos=%s"%options.queue]
+        #print ["#SBATCH --qos=%s"%options.queue]
     if options.nGPUs:
         submitCommands += ["#SBATCH --gres=gpu:%i"%options.nGPUs]
     if options.partition:
