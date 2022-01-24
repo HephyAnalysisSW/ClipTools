@@ -30,6 +30,8 @@ hostname      = os.getenv("HOSTNAME")
 proxy         = os.getenv("X509_USER_PROXY")
 submit_time   = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 inSingularity = os.path.exists("/.singularity.d/")
+#batch_output  = "/scratch-cbe/users/%s/batch_output"%(user)
+#batch_tmp     = "/scratch-cbe/users/%s/batch_input"%(user)
 batch_output  = "/scratch/%s/batch_output"%(user)
 batch_tmp     = "/scratch/%s/batch_input"%(user)
 
