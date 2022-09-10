@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """ 
 selects batch jobs in the queue by criteria and either displays them like squeue (default), gives the number of jobs (--n), gives infos to the jobs (--info)  or removes them (--rm)

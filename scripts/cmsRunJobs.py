@@ -63,25 +63,30 @@ elif os.path.exists( args.input ) and os.path.isdir( args.input ):
     for filename in os.listdir( args.input ):
         if filename.endswith('.root'):
             files.append(os.path.join( args.input, filename ))
+elif args.input.lower() == 'gen':
+    files = None
 
-if len(files)==0:
-    raise RuntimeError('Found zero files for input %s'%args.input)
+if files is not None:
+    if len(files)==0:
+        raise RuntimeError('Found zero files for input %s'%args.input)
     
-def partition(lst, n):
-    ''' Partition list into chunks of approximately equal size'''
-    # http://stackoverflow.com/questions/2659900/python-slicing-a-list-into-n-nearly-equal-length-partitions
-    n_division = len(lst) / float(n)
-    return [ lst[int(round(n_division * i)): int(round(n_division * (i + 1)))] for i in xrange(n) ]
+    def partition(lst, n):
+        ''' Partition list into chunks of approximately equal size'''
+        # http://stackoverflow.com/questions/2659900/python-slicing-a-list-into-n-nearly-equal-length-partitions
+        n_division = len(lst) / float(n)
+        return [ lst[int(round(n_division * i)): int(round(n_division * (i + 1)))] for i in xrange(n) ]
 
-# 1 job / file as default
-if args.n_split is None:
-    args.n_split=len(files)
-if args.n_files>0:
-    args.n_split = int(math.ceil(len(files)/args.n_files))
-chunks = partition( files, min(args.n_split , len(files) ) ) 
-logger.info( "Got %i files and n_split into %i jobs of %3.2f files/job on average." % ( len(files), len(chunks), len(files)/float(len(chunks))) )
-for chunk in chunks:
-    pass
+    # 1 job / file as default
+    if args.n_split is None:
+        args.n_split=len(files)
+    if args.n_files>0:
+        args.n_split = int(math.ceil(len(files)/args.n_files))
+    chunks = partition( files, min(args.n_split , len(files) ) ) 
+    logger.info( "Got %i files and n_split into %i jobs of %3.2f files/job on average." % ( len(files), len(chunks), len(files)/float(len(chunks))) )
+    for chunk in chunks:
+        pass
+else:
+    chunks = range(args.n_files)
 
 # Deal with the config
 logger.info("Config: %s", args.cfg)
@@ -110,8 +115,9 @@ import FWCore.ParameterSet.Config as cms
 import uuid
 with file('jobs.sh', 'a+') as job_file:
     for i_chunk, chunk in enumerate(chunks):
-        # set input
-        module.process.source.fileNames = cms.untracked.vstring(map(lambda filename: args.redirector+filename, chunk))
+        # set input if not GEN
+        if files is not None:
+            module.process.source.fileNames = cms.untracked.vstring(map(lambda filename: args.redirector+filename, chunk))
         move_cmds = []
         # set output
         for out_name, output_module in module.process.outputModules.iteritems():
@@ -119,9 +125,10 @@ with file('jobs.sh', 'a+') as job_file:
             output_tmp_filename = '%s_%i_%s.root'%(out_name, i_chunk, str(uuid.uuid4()))
             output_module.fileName  = cms.untracked.string(os.path.join('/tmp/', output_tmp_filename))
             move_cmds.append( (os.path.join('/tmp/', output_tmp_filename), os.path.join(targetDir, output_filename)) )
-        # set maxEvents to -1
-        if hasattr( module.process, "maxEvents" ):
-            module.process.maxEvents.input = cms.untracked.int32(-1)
+        # set maxEvents to -1 if not GEN
+        if files is not None:
+            if hasattr( module.process, "maxEvents" ):
+                module.process.maxEvents.input = cms.untracked.int32(-1)
         # dump cfg
         out_cfg_name = os.path.join( batch_tmp, str(uuid.uuid4()).replace('-','_')+'.py' )
         with file(out_cfg_name, 'w') as out_cfg:
