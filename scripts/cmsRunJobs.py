@@ -16,6 +16,7 @@ def get_parser():
     argParser.add_argument('--limit',       action='store',         nargs='?',  type=int, default=0, help="Limit DAS query?" )
     argParser.add_argument('--n_split',     action='store',         nargs='?',  type=int, help="Number of jobs." )
     argParser.add_argument('--n_files',     action='store',         nargs='?',  type=int, default=0, help="Number of files per job." )
+    argParser.add_argument('--noDuplicateCheck',     action='store_true',  help="Skip duplicate check?" )
 
     return argParser
 
@@ -118,13 +119,21 @@ with file('jobs.sh', 'a+') as job_file:
         # set input if not GEN
         if files is not None:
             module.process.source.fileNames = cms.untracked.vstring(map(lambda filename: args.redirector+filename, chunk))
+
+        if args.noDuplicateCheck:
+            module.process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+
         move_cmds = []
         # set output
         for out_name, output_module in module.process.outputModules.iteritems():
             output_filename     = '%s_%i.root'%(out_name, i_chunk)
-            output_tmp_filename = '%s_%i_%s.root'%(out_name, i_chunk, str(uuid.uuid4()))
-            output_module.fileName  = cms.untracked.string(os.path.join('/tmp/', output_tmp_filename))
-            move_cmds.append( (os.path.join('/tmp/', output_tmp_filename), os.path.join(targetDir, output_filename)) )
+            uuid_ =  str(uuid.uuid4())
+            output_tmp_filename = '%s_%i_%s.root'%(out_name, i_chunk, uuid_ )
+            run_dir = '/tmp/%s/'%uuid_
+            if not os.path.exists( run_dir ):
+                os.makedirs( run_dir )
+            output_module.fileName  = cms.untracked.string(os.path.join(run_dir, output_tmp_filename))
+            move_cmds.append( (os.path.join(run_dir, output_tmp_filename), os.path.join(targetDir, output_filename)) )
         # set maxEvents to -1 if not GEN
         if files is not None:
             if hasattr( module.process, "maxEvents" ):
@@ -137,4 +146,4 @@ with file('jobs.sh', 'a+') as job_file:
 
         move_string =  ";" if len(move_cmds)>0 else ""
         move_string += ";".join(["mv %s %s"%move_cmd for move_cmd in move_cmds])
-        job_file.write('cmsRun %s'%out_cfg_name + move_string + '\n')
+        job_file.write('mkdir -p %s; cd %s;cmsRun %s'%( run_dir, run_dir, out_cfg_name + move_string + '\n'))
