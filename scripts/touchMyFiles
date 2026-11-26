@@ -1,4 +1,4 @@
 #!/bin/bash
 
-find /scratch-cbe/users/$USER/ -exec touch {} \;
+find /scratch/users/$USER/ -exec touch {} \;
 echo Done touching myself.
